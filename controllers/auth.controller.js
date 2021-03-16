@@ -132,3 +132,54 @@ exports.activationController = (req, res) => {
     })
   }
 }
+
+exports.loginController = (req, res) => {
+  const { email, password } = req.body
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    const firstError = errors.array().map((error) => error.msg)[0]
+    return res.status(442).json({
+      error: firstError
+    })
+  } else {
+    // check if user exist
+    User.findOne({
+      email
+    }).exec((err, user) => {
+      if (err || !user) {
+        return res.status(400).json({
+          error: 'User with that email does not exist. Please Sign up'
+        })
+      }
+
+      // authenticate
+      if (!user.authenticate(password)) {
+        return res.status(400).json({
+          error: 'Email and password do not match'
+        })
+      }
+
+      // generate token
+      const token = jwt.sign(
+        {
+          _id: user._id
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '7d'
+        }
+      )
+      const { _id, name, email, role } = user
+      return res.json({
+        token,
+        user: {
+          _id,
+          name,
+          email,
+          role
+        }
+      })
+    })
+  }
+}

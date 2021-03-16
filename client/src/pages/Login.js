@@ -3,48 +3,47 @@ import authSvg from '../assets/auth.svg'
 import { ToastContainer, toast } from 'react-toastify'
 import { authenticate, isAuth } from '../helpers/auth'
 import axios from 'axios'
-import { Redirect, Link } from 'react-router-dom'
+import { Redirect } from 'react-router-dom'
 
-const Register = () => {
+const Login = ({ history }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password1: '',
-    password2: ''
+    password1: ''
   })
 
-  const { email, name, password1, password2 } = formData
+  const { email, password1 } = formData
 
   const handleChange = (text) => (e) => {
     setFormData({ ...formData, [text]: e.target.value })
   }
 
+  // submit data to backend
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (name && email && password1) {
-      if (password1 === password2) {
-        axios
-          .post(`${process.env.REACT_APP_API_URL}/register`, {
-            name,
-            email,
-            password: password1
-          })
-          .then((res) => {
+    if (email && password1) {
+      axios
+        .post(`${process.env.REACT_APP_API_URL}/login`, {
+          email,
+          password: password1
+        })
+        .then((res) => {
+          authenticate(res, () => {
             setFormData({
               ...formData,
-              name: '',
               email: '',
-              password1: '',
-              password2: ''
+              password1: ''
             })
-            toast.success(res.data.message)
+            //   console.log(res.data);
           })
-          .catch((err) => {
-            toast.error(err.response.data.error)
-          })
-      } else {
-        toast.error("Password don't matches")
-      }
+          isAuth() && isAuth().role === 'admin'
+            ? history.push('/admin')
+            : history.push('/private')
+          toast.success(`Hey ${res.data.user.name}, welcome back`)
+        })
+        .catch((err) => {
+          toast.error(err.response.data.error)
+        })
     } else {
       toast.error('Please fill all fields')
     }
@@ -57,20 +56,13 @@ const Register = () => {
       <div className='max-w-screen-xl m-0 sm:m-20 bg-white shadow sm:rounded-lg flex justify-center flex-1'>
         <div className='lg:w-1/2 xl:w-5/12 p-6 sm:p-12'>
           <div className='mt-12 flex flex-col items-center'>
-            <h1 className='text-2xl xl:text-3xl font-extrabold'>Sign Up</h1>
+            <h1 className='text-2xl xl:text-3xl font-extrabold'>Sign In</h1>
 
             <form
               className='w-full flex-1 mt-8 text-indigo-500'
               onSubmit={handleSubmit}
             >
               <div className='mx-auto max-w-xs relative'>
-                <input
-                  type='text'
-                  placeholder='Name'
-                  onChange={handleChange('name')}
-                  value={name}
-                  className='w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white'
-                />
                 <input
                   type='email'
                   placeholder='Email'
@@ -85,32 +77,25 @@ const Register = () => {
                   value={password1}
                   className='w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5'
                 />
-                <input
-                  type='password'
-                  placeholder='Confirm Password'
-                  onChange={handleChange('password2')}
-                  value={password2}
-                  className='w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5'
-                />
                 <button
                   type='submit'
                   className='mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none'
                 >
-                  Register
+                  Login
                 </button>
               </div>
               <div className='my-12 border-b text-center'>
                 <div className='leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2'>
-                  Or Sign In with email or social login
+                  Or Sign Up
                 </div>
               </div>
               <div className='flex flex-col items-center'>
                 <a
-                  href='/login'
+                  href='/register'
                   className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3
            bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5'
                 >
-                  Sign In
+                  Sign Up
                 </a>
               </div>
             </form>
@@ -127,4 +112,4 @@ const Register = () => {
   )
 }
 
-export default Register
+export default Login
