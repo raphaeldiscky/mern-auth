@@ -92,8 +92,6 @@ exports.registerController = (req, res) => {
   }
 }
 
-//
-
 // const emailData = {
 //   from: process.env.EMAIL_FROM,
 //   to: to,
