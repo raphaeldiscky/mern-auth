@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import authSvg from '../assets/auth.svg'
+import loginSvg from '../assets/login.svg'
+import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { authenticate, isAuth } from '../helpers/auth'
-import axios from 'axios'
 import { Redirect } from 'react-router-dom'
 
 const Login = ({ history }) => {
@@ -83,6 +83,12 @@ const Login = ({ history }) => {
                 >
                   Login
                 </button>
+                <a
+                  href='/users/password/forget'
+                  className='no-underline hover:underline text-indigo-500 text-md text-right absolute right-0 mt-2'
+                >
+                  Forget Password?
+                </a>
               </div>
               <div className='my-12 border-b text-center'>
                 <div className='leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2'>
@@ -104,7 +110,7 @@ const Login = ({ history }) => {
         <div className='flex-1 bg-indigo-100 text-center hidden lg:flex'>
           <div
             className='m-12 xl:m-16 w-full bg-contain bg-center bg-no-repeat'
-            style={{ backgroundImage: `url(${authSvg})` }}
+            style={{ backgroundImage: `url(${loginSvg})` }}
           ></div>
         </div>
       </div>

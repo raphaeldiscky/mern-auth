@@ -5,7 +5,7 @@ const router = express.Router()
 const {
   validRegister,
   validLogin,
-  forgotPasswordValidator,
+  forgetPasswordValidator,
   resetPasswordValidator
 } = require('../helpers/validation')
 
@@ -19,5 +19,6 @@ const {
 router.post('/register', validRegister, registerController)
 router.post('/login', validLogin, loginController)
 router.post('/activation', activationController)
+router.post('/password/forget', forgetPasswordValidator, forgetController)
 
 module.exports = router

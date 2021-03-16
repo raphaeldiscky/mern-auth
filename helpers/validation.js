@@ -31,7 +31,7 @@ exports.validLogin = [
     .withMessage('Password must contain a number')
 ]
 
-exports.forgotPasswordValidator = [
+exports.forgetPasswordValidator = [
   check('email')
     .not()
     .isEmpty()
