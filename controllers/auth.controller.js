@@ -15,15 +15,6 @@ exports.registerController = (req, res) => {
   const { name, email, password } = req.body
   const errors = validationResult(req)
 
-  const oAuth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT,
-    process.env.GOOGLE_SECRET,
-    process.env.GOOGLE_REDIRECT_URL
-  )
-  oAuth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-  })
-
   // validation to req.body, we will create custom validation in seconds
   if (!errors.isEmpty()) {
     const firstError = errors.array().map((error) => error.msg[0])
@@ -48,6 +39,15 @@ exports.registerController = (req, res) => {
       process.env.JWT_ACCOUNT_ACTIVATION,
       { expiresIn: '15m' }
     )
+
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT,
+      process.env.GOOGLE_SECRET,
+      process.env.GOOGLE_REDIRECT_URL
+    )
+    oAuth2Client.setCredentials({
+      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+    })
 
     const accessToken = oAuth2Client.getAccessToken()
 
@@ -139,7 +139,7 @@ exports.loginController = (req, res) => {
 
   if (!errors.isEmpty()) {
     const firstError = errors.array().map((error) => error.msg)[0]
-    return res.status(442).json({
+    return res.status(422).json({
       error: firstError
     })
   } else {
@@ -180,6 +180,98 @@ exports.loginController = (req, res) => {
           role
         }
       })
+    })
+  }
+}
+
+exports.forgetController = (req, res) => {
+  const { email } = req.body
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    const firstError = errors.array().map((error) => error.msg)[0]
+    return res.status(422).json({
+      error: firstError
+    })
+  } else {
+    User.findOne({ email }, (err, user) => {
+      if (err || !user) {
+        return res.status(400).json({
+          error: 'User with that email does not exist'
+        })
+      }
+      const token = jwt.sign(
+        {
+          _id: user._id
+        },
+        process.env.JWT_RESET_PASSWORD,
+        {
+          expiresIn: '10m'
+        }
+      )
+
+      const oAuth2Client = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT,
+        process.env.GOOGLE_SECRET,
+        process.env.GOOGLE_REDIRECT_URL
+      )
+      oAuth2Client.setCredentials({
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+      })
+
+      const accessToken = oAuth2Client.getAccessToken()
+
+      let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: 'zundria.putra@gmail.com',
+          clientId: process.env.GOOGLE_CLIENT,
+          clientSecret: process.env.GOOGLE_SECRET,
+          refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+          accessToken: accessToken
+        }
+      })
+
+      // send email with this token
+      let info = {
+        from: `Raphael Discky 👻 <${process.env.EMAIL_FROM}>`,
+        to: `${email}`,
+        subject: 'Password Reset Link',
+        text: 'Password Reset Link',
+        html: `
+          <h1>Please Click to link to reset your password</h1>
+          <p>${process.env.CLIENT_URL}/users/password/reset/${token}</p>
+          <hr/>
+          <p>This email contain sensitive info</p>
+          <p>${process.env.CLIENT_URL}</p>
+        `
+      }
+
+      return user.updateOne(
+        {
+          resetPasswordLink: token
+        },
+        (err, success) => {
+          if (err) {
+            return res.status(400).json({
+              error: errorHandler(err)
+            })
+          } else {
+            transporter.sendMail(info, (error, info) => {
+              if (error) {
+                return res.status(400).json({
+                  error: errorHandler(error)
+                })
+              } else {
+                return res.json({
+                  message: `Email has been sent to ${email}`
+                })
+              }
+            })
+          }
+        }
+      )
     })
   }
 }

@@ -4,7 +4,8 @@ import Register from './pages/Register'
 import Home from './pages/Home'
 import Activate from './pages/Activate'
 import Login from './pages/Login'
-import Forget from './pages/Forget'
+import ForgetPassword from './pages/ForgetPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   return (
@@ -13,8 +14,13 @@ function App() {
         <Route exact path='/' component={Home} />
         <Route exact path='/register' component={Register} />
         <Route exact path='/login' component={Login} />
-        <Route exact path='/users/password/forget' component={Forget} />
+        <Route exact path='/users/password/forget' component={ForgetPassword} />
         <Route exact path='/users/activate/:token' component={Activate} />
+        <Route
+          exact
+          path='/users/password/reset/:token'
+          component={ResetPassword}
+        />
       </Switch>
     </Router>
   )
