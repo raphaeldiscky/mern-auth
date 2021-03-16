@@ -32,9 +32,9 @@ if (process.env.NODE_ENV === 'development') {
 const authRouter = require('./routes/auth.route')
 
 // use routes
-app.use('/api/', authRouter)
+app.use('/api', authRouter)
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'Page Not Founded'

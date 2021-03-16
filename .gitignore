@@ -13,3 +13,5 @@ node_modules/
 # misc
 .DS_Store
 /config/config.env
+/client/.env
+**/*.env
