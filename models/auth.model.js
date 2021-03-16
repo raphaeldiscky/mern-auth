@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     salt: String,
     role: {
       type: String,
-      default: 'Normal'
+      default: 'subscriber'
       // we have more type (normal, admin, ...)
     },
     resetPasswordLink: {
@@ -40,7 +40,7 @@ userSchema
   .virtual('password')
   .set(function (password) {
     // set password, note you must use normal function not arrow function
-    this.password = password
+    this._password = password
     this.salt = this.makeSalt()
     this.hashed_password = this.encryptPassword(password)
   })
