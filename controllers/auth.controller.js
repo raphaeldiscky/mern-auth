@@ -45,7 +45,7 @@ exports.registerController = (req, res) => {
         email,
         password
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_ACCOUNT_ACTIVATION,
       { expiresIn: '15m' }
     )
 
@@ -92,28 +92,42 @@ exports.registerController = (req, res) => {
   }
 }
 
-// const emailData = {
-//   from: process.env.EMAIL_FROM,
-//   to: to,
-//   subject: `Account activation link`,
-//   html: `
-//     <h1>Please Click to link to activate</h1>
-//     <p>${process.env.CLIENT_URL}/users/activate/${token}</p>
-//     <hr/>
-//     <p>This email contain sensitive info</p>
-//     <p>${process.env.CLIENT_URL}</p>
-//   `
-// }
+// Activation and save to database
+exports.activationController = (req, res) => {
+  const { token } = req.body
 
-// sgMail
-//   .send(emailData)
-//   .then((sent) => {
-//     return res.json({
-//       message: `Email has been sent to ${email}`
-//     })
-//   })
-//   .catch((err) => {
-//     return res.status(400).json({
-//       error: errorHandler(err)
-//     })
-//   })
+  if (token) {
+    jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          errors: 'Expired token. Signup again'
+        })
+      } else {
+        const { name, email, password } = jwt.decode(token)
+
+        const user = new User({
+          name,
+          email,
+          password
+        })
+
+        user.save((err, user) => {
+          if (err) {
+            return res.status(401).json({
+              errors: errorHandler(err)
+            })
+          } else {
+            return res.json({
+              success: true,
+              message: 'Signup Success'
+            })
+          }
+        })
+      }
+    })
+  } else {
+    return res.json({
+      message: 'Error happening please try again'
+    })
+  }
+}
