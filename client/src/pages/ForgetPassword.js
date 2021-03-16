@@ -41,7 +41,7 @@ const ForgetPassword = () => {
         <div className='lg:w-1/2 xl:w-5/12 p-6 sm:p-12'>
           <div className='mt-12 flex flex-col items-center'>
             <h1 className='text-2xl xl:text-3xl font-extrabold'>
-              ForgetPassword Password ?
+              Reset your password
             </h1>
 
             <form
@@ -64,19 +64,11 @@ const ForgetPassword = () => {
                   <i className='fas fa-sign-in-alt  w-6  -ml-2' />
                   <span className='ml-3'>Submit</span>
                 </button>
-              </div>
-              <div className='my-12 border-b text-center'>
-                <div className='leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2'>
-                  Or go back to Sign in
-                </div>
-              </div>
-              <div className='flex flex-col items-center'>
                 <a
                   href='/login'
-                  className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3
-           bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5'
+                  className='no-underline hover:underline text-indigo-500 text-md text-right absolute right-0 mt-2'
                 >
-                  Sign In
+                  Return to sign in
                 </a>
               </div>
             </form>

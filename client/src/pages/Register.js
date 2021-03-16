@@ -96,7 +96,8 @@ const Register = () => {
                   type='submit'
                   className='mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none'
                 >
-                  Register
+                  <i className='fas fa-sign-in-alt w-6 -ml-2' />
+                  <span className='ml-3'>Register</span>
                 </button>
               </div>
               <div className='my-12 border-b text-center'>
