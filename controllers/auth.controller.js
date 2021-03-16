@@ -119,7 +119,8 @@ exports.activationController = (req, res) => {
           } else {
             return res.json({
               success: true,
-              message: 'Signup Success'
+              message: 'Signup Success',
+              user
             })
           }
         })
