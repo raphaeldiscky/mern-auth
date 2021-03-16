@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
 const { OAuth2Client } = require('google-auth-library')
 const { validationResult } = require('express-validator')
+const { google } = require('googleapis')
 
 // custom error handler to get useful error from database errors
 const { errorHandler } = require('../helpers/dbErrorHandling')
@@ -13,6 +14,15 @@ const { errorHandler } = require('../helpers/dbErrorHandling')
 exports.registerController = (req, res) => {
   const { name, email, password } = req.body
   const errors = validationResult(req)
+
+  const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT,
+    process.env.GOOGLE_SECRET,
+    process.env.GOOGLE_REDIRECT_URL
+  )
+  oAuth2Client.setCredentials({
+    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
+  })
 
   // validation to req.body, we will create custom validation in seconds
   if (!errors.isEmpty()) {
@@ -39,21 +49,26 @@ exports.registerController = (req, res) => {
       { expiresIn: '15m' }
     )
 
+    const accessToken = oAuth2Client.getAccessToken()
+
     let transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
+      service: 'gmail',
       auth: {
-        user: 'lexie.ryan@ethereal.email',
-        pass: 'Ch2YTBnVpk8MWEytU9'
+        type: 'OAuth2',
+        user: 'zundria.putra@gmail.com',
+        clientId: process.env.GOOGLE_CLIENT,
+        clientSecret: process.env.GOOGLE_SECRET,
+        refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+        accessToken: accessToken
       }
     })
 
     // email data sending
     let info = {
-      from: `Fred Foo 👻 <${process.env.EMAIL_FROM}>`,
+      from: `Raphael Discky 👻 <${process.env.EMAIL_FROM}>`,
       to: `${email}`,
-      subject: 'Account activation link ✔',
-      text: 'Hello world?',
+      subject: 'Account Activation Link',
+      text: 'Account Activation Link',
       html: `
         <h1>Please Click to link to activate</h1>
         <p>${process.env.CLIENT_URL}/users/activate/${token}</p>
@@ -69,8 +84,6 @@ exports.registerController = (req, res) => {
           error: errorHandler(error)
         })
       } else {
-        console.log('Message sent: %s', info.messageId)
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info))
         return res.json({
           message: `Email has been sent to ${email}`
         })
