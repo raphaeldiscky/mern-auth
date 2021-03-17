@@ -4,6 +4,7 @@ import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { authenticate, isAuth } from '../helpers/auth'
 import { Redirect } from 'react-router-dom'
+import { GoogleLogin } from 'react-google-login'
 
 const Login = ({ history }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,35 @@ const Login = ({ history }) => {
 
   const handleChange = (text) => (e) => {
     setFormData({ ...formData, [text]: e.target.value })
+  }
+
+  // send google token
+  const sendGoogleToken = (tokenId) => {
+    axios
+      .post(`${process.env.REACT_APP_API_URL}/googleLogin`, {
+        idToken: tokenId
+      })
+      .then((res) => {
+        informParent(res)
+      })
+      .catch((err) => {
+        toast.error('Google login error')
+      })
+  }
+
+  // if success we need to authenticate user and redirect
+  const informParent = (response) => {
+    authenticate(response, () => {
+      isAuth() && isAuth.role === 'admin'
+        ? history.push('/admin')
+        : history.push('/private')
+    })
+  }
+
+  // Get response from google
+  const responseGoogle = (response) => {
+    // console.log(response)
+    sendGoogleToken(response.tokenId)
   }
 
   // submit data to backend
@@ -97,6 +127,24 @@ const Login = ({ history }) => {
                 </div>
               </div>
               <div className='flex flex-col items-center'>
+                <GoogleLogin
+                  clientId={`${process.env.REACT_APP_GOOGLE_CLIENT}`}
+                  onSuccess={responseGoogle}
+                  onFailure={responseGoogle}
+                  cookiePolicy={'single_host_origin'}
+                  render={(renderProps) => (
+                    <button
+                      onClick={renderProps.onClick}
+                      disabled={renderProps.disabled}
+                      className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
+                    >
+                      <div className=' p-2 rounded-full '>
+                        <i className='fab fa-google ' />
+                      </div>
+                      <span className='ml-4'>Sign In with Google</span>
+                    </button>
+                  )}
+                ></GoogleLogin>
                 <a
                   href='/register'
                   className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3
