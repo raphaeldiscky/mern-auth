@@ -23,21 +23,22 @@ const ResetPassword = ({ match }) => {
     setFormData({ ...formData, [text]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (password1 === password2 && password2 && password1) {
-      axios
-        .put(`${process.env.REACT_APP_API_URL}/password/reset`, {
-          newPassword: password1,
-          resetPasswordLink: token
-        })
-        .then((res) => {
-          setFormData({ ...formData, password1: '', password2: '' })
-          toast.success(res.data.message)
-        })
-        .catch((err) => {
-          toast.error(err.response.data.error)
-        })
+      try {
+        const res = await axios.put(
+          `${process.env.REACT_APP_API_URL}/password/reset`,
+          {
+            newPassword: password1,
+            resetPasswordLink: token
+          }
+        )
+        setFormData({ ...formData, password1: '', password2: '' })
+        toast.success(res.data.message)
+      } catch (err) {
+        toast.error(err.response.data.error)
+      }
     } else {
       toast.error("Passwords don't matches")
     }

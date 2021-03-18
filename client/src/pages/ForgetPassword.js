@@ -14,23 +14,21 @@ const ForgetPassword = () => {
     setFormData({ ...formData, [text]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (email) {
-      axios
-        .put(`${process.env.REACT_APP_API_URL}/password/forget`, {
+      try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/password/forget`, {
           email
         })
-        .then((res) => {
-          setFormData({
-            ...formData,
-            email: ''
-          })
-          toast.success('Please check your email')
+        setFormData({
+          ...formData,
+          email: ''
         })
-        .catch((err) => {
-          toast.error(err.response.data.error)
-        })
+        toast.success('Please check your email')
+      } catch (err) {
+        toast.error(err.response.data.error)
+      }
     }
   }
 

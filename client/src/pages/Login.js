@@ -21,31 +21,33 @@ const Login = ({ history }) => {
   }
 
   // send google token
-  const sendGoogleToken = (tokenId) => {
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/googlelogin`, {
-        idToken: tokenId
-      })
-      .then((res) => {
-        informParent(res)
-      })
-      .catch((err) => {
-        toast.error('Google login error')
-      })
+  const sendGoogleToken = async (tokenId) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/googlelogin`,
+        {
+          idToken: tokenId
+        }
+      )
+      informParent(res)
+    } catch (err) {
+      toast.error('Google login error')
+    }
   }
   // send google facebook
-  const sendFacebookToken = (userID, accessToken) => {
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/facebooklogin`, {
-        userID,
-        accessToken
-      })
-      .then((res) => {
-        informParent(res)
-      })
-      .catch((err) => {
-        toast.error('Facebook login error')
-      })
+  const sendFacebookToken = async (userID, accessToken) => {
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/facebooklogin`,
+        {
+          userID,
+          accessToken
+        }
+      )
+      informParent(res)
+    } catch (err) {
+      toast.error('Facebook login error')
+    }
   }
 
   // if success we need to authenticate user and redirect
@@ -59,42 +61,39 @@ const Login = ({ history }) => {
 
   // get response from google
   const responseGoogle = (response) => {
-    console.log(response.data)
+    console.log(response)
     sendGoogleToken(response.tokenId)
   }
 
   // get response from facebook
   const responseFacebook = (response) => {
-    console.log(response.data)
+    console.log(response)
     sendFacebookToken(response.userID, response.accessToken)
   }
 
   // submit data to backend
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (email && password1) {
-      axios
-        .post(`${process.env.REACT_APP_API_URL}/login`, {
+      try {
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, {
           email,
           password: password1
         })
-        .then((res) => {
-          authenticate(res, () => {
-            setFormData({
-              ...formData,
-              email: '',
-              password1: ''
-            })
-            //   console.log(res.data);
+        authenticate(res, () => {
+          setFormData({
+            ...formData,
+            email: '',
+            password1: ''
           })
-          isAuth() && isAuth().role === 'admin'
-            ? history.push('/admin')
-            : history.push('/private')
-          toast.success(`Hey ${res.data.user.name}, welcome back`)
         })
-        .catch((err) => {
-          toast.error(err.response.data.error)
-        })
+        isAuth() && isAuth().role === 'admin'
+          ? history.push('/admin')
+          : history.push('/private')
+        toast.success(`Hey ${res.data.user.name}, welcome back`)
+      } catch (err) {
+        toast.error(err.response.data.error)
+      }
     } else {
       toast.error('Please fill all fields')
     }

@@ -19,29 +19,30 @@ const Register = () => {
     setFormData({ ...formData, [text]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (name && email && password1) {
       if (password1 === password2) {
-        axios
-          .post(`${process.env.REACT_APP_API_URL}/register`, {
-            name,
-            email,
-            password: password1
+        try {
+          const res = await axios.post(
+            `${process.env.REACT_APP_API_URL}/register`,
+            {
+              name,
+              email,
+              password: password1
+            }
+          )
+          setFormData({
+            ...formData,
+            name: '',
+            email: '',
+            password1: '',
+            password2: ''
           })
-          .then((res) => {
-            setFormData({
-              ...formData,
-              name: '',
-              email: '',
-              password1: '',
-              password2: ''
-            })
-            toast.success(res.data.message)
-          })
-          .catch((err) => {
-            toast.error(err.response.data.error)
-          })
+          toast.success(res.data.message)
+        } catch (err) {
+          toast.error(err.response.data.error)
+        }
       } else {
         toast.error("Password don't matches")
       }

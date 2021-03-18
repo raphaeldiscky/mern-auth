@@ -27,22 +27,21 @@ const Activate = ({ match }) => {
 
   const { name, token } = formData
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/activation`, {
-        token
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/activation`,
+        { token }
+      )
+      setFormData({
+        ...formData,
+        show: false
       })
-      .then((res) => {
-        setFormData({
-          ...formData,
-          show: false
-        })
-        toast.success(res.data.message)
-      })
-      .catch((err) => {
-        toast.error(err.response.data.errors)
-      })
+      toast.success(res.data.message)
+    } catch (err) {
+      toast.error(err.response.data.errors)
+    }
   }
 
   return (

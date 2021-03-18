@@ -1,5 +1,4 @@
 const User = require('../models/auth.model')
-const expressJwt = require('express-jwt')
 const _ = require('lodash')
 const axios = require('axios')
 const jwt = require('jsonwebtoken')
@@ -328,72 +327,19 @@ exports.resetController = (req, res) => {
 }
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT)
-exports.googleController = (req, res) => {
+
+exports.googleController = async (req, res) => {
   const { idToken } = req.body
   // get token from request
-
-  // verify token
-  client
-    .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT })
-    .then((response) => {
-      const { email_verified, name, email } = response.payload
-      // check if email verified
-      if (email_verified) {
-        User.findOne({ email }).exec((err, user) => {
-          // find if this email already exists
-          if (user) {
-            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
-              expiresIn: '7d'
-            })
-            const { _id, email, name, role } = user
-            // send response to client side
-            return res.json({
-              token,
-              user: { _id, email, name, role }
-            })
-          } else {
-            // if user not exist, we will save in database and generate password for it
-            let password = email + process.env.JWT_SECRET
-            user = new User({ name, email, password }) // create user object with this email
-            user.save((err, data) => {
-              if (err) {
-                return res.status(400).json({
-                  error: errorHandler(err)
-                })
-              }
-              // if no error, generate token
-              const token = jwt.sign(
-                { _id: data._id },
-                process.env.JWT_SECRET,
-                { expiresIn: '7d' }
-              )
-              const { _id, email, name, role } = data
-              return res.json({
-                token,
-                user: { _id, email, name, role }
-              })
-            })
-          }
-        })
-      } else {
-        return res.status(400).json({
-          error: 'Google login failed, try again'
-        })
-      }
+  try {
+    const response = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT
     })
-}
-
-exports.facebookController = (req, res) => {
-  const { userID, accessToken } = req.body
-  const url = `https://graph.facebook.com/${userID}?fields=id,name&access_token=${accessToken}`
-
-  // get data from facebook
-  return axios(url, {
-    method: 'GET'
-  })
-    .then((response) => {
-      const { email, name } = response
+    const { email_verified, name, email } = response.payload
+    if (email_verified) {
       User.findOne({ email }).exec((err, user) => {
+        // find if this email already exists
         if (user) {
           const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
             expiresIn: '7d'
@@ -405,15 +351,16 @@ exports.facebookController = (req, res) => {
             user: { _id, email, name, role }
           })
         } else {
+          // if user not exist, we will save in database and generate password for it
           let password = email + process.env.JWT_SECRET
-          user = new User({ name, email, password })
+          user = new User({ name, email, password }) // create user object with this email
           user.save((err, data) => {
             if (err) {
               return res.status(400).json({
-                error: 'User sign in failed with Facebook'
+                error: errorHandler(err)
               })
             }
-
+            // if no error, generate token
             const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET, {
               expiresIn: '7d'
             })
@@ -425,8 +372,57 @@ exports.facebookController = (req, res) => {
           })
         }
       })
+    } else {
+      return res.status(400).json({
+        error: 'Google login failed, try again'
+      })
+    }
+  } catch (err) {
+    toast.error(err)
+  }
+}
+
+exports.facebookController = async (req, res) => {
+  const { userID, accessToken } = req.body
+  const url = `https://graph.facebook.com/${userID}?fields=id,name&access_token=${accessToken}`
+
+  // get data from facebook
+  try {
+    const response = await axios(url, { method: 'GET' })
+    const { email, name } = response
+    User.findOne({ email }).exec((err, user) => {
+      if (user) {
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+          expiresIn: '7d'
+        })
+        const { _id, email, name, role } = user
+        // send response to client side
+        return res.json({
+          token,
+          user: { _id, email, name, role }
+        })
+      } else {
+        let password = email + process.env.JWT_SECRET
+        user = new User({ name, email, password })
+        user.save((err, data) => {
+          if (err) {
+            return res.status(400).json({
+              error: 'User sign in failed with Facebook'
+            })
+          }
+
+          const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET, {
+            expiresIn: '7d'
+          })
+          const { _id, email, name, role } = data
+          return res.json({
+            token,
+            user: { _id, email, name, role }
+          })
+        })
+      }
     })
-    .catch((error) => {
-      res.json({ error: 'Facebook login failed, try again' })
-    })
+  } catch (err) {
+    res.json({ error: 'Facebook login failed, try again' })
+  }
 }
