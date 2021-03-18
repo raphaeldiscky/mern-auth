@@ -382,3 +382,51 @@ exports.googleController = (req, res) => {
       }
     })
 }
+
+exports.facebookController = (req, res) => {
+  const { userID, accessToken } = req.body
+  const url = `https://graph.facebook.com/${userID}?fields=id,name&access_token=${accessToken}`
+
+  // get data from facebook
+  return axios(url, {
+    method: 'GET'
+  })
+    .then((response) => {
+      const { email, name } = response
+      User.findOne({ email }).exec((err, user) => {
+        if (user) {
+          const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+            expiresIn: '7d'
+          })
+          const { _id, email, name, role } = user
+          // send response to client side
+          return res.json({
+            token,
+            user: { _id, email, name, role }
+          })
+        } else {
+          let password = email + process.env.JWT_SECRET
+          user = new User({ name, email, password })
+          user.save((err, data) => {
+            if (err) {
+              return res.status(400).json({
+                error: 'User sign in failed with Facebook'
+              })
+            }
+
+            const token = jwt.sign({ _id: data._id }, process.env.JWT_SECRET, {
+              expiresIn: '7d'
+            })
+            const { _id, email, name, role } = data
+            return res.json({
+              token,
+              user: { _id, email, name, role }
+            })
+          })
+        }
+      })
+    })
+    .catch((error) => {
+      res.json({ error: 'Facebook login failed, try again' })
+    })
+}

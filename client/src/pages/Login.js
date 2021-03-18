@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import { authenticate, isAuth } from '../helpers/auth'
 import { Redirect } from 'react-router-dom'
 import { GoogleLogin } from 'react-google-login'
+import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props'
 
 const Login = ({ history }) => {
   const [formData, setFormData] = useState({
@@ -22,7 +23,7 @@ const Login = ({ history }) => {
   // send google token
   const sendGoogleToken = (tokenId) => {
     axios
-      .post(`${process.env.REACT_APP_API_URL}/googleLogin`, {
+      .post(`${process.env.REACT_APP_API_URL}/googlelogin`, {
         idToken: tokenId
       })
       .then((res) => {
@@ -30,6 +31,20 @@ const Login = ({ history }) => {
       })
       .catch((err) => {
         toast.error('Google login error')
+      })
+  }
+  // send google facebook
+  const sendFacebookToken = (userID, accessToken) => {
+    axios
+      .post(`${process.env.REACT_APP_API_URL}/facebooklogin`, {
+        userID,
+        accessToken
+      })
+      .then((res) => {
+        informParent(res)
+      })
+      .catch((err) => {
+        toast.error('Facebook login error')
       })
   }
 
@@ -42,10 +57,16 @@ const Login = ({ history }) => {
     })
   }
 
-  // Get response from google
+  // get response from google
   const responseGoogle = (response) => {
-    // console.log(response)
+    console.log(response.data)
     sendGoogleToken(response.tokenId)
+  }
+
+  // get response from facebook
+  const responseFacebook = (response) => {
+    console.log(response.data)
+    sendFacebookToken(response.userID, response.accessToken)
   }
 
   // submit data to backend
@@ -127,24 +148,6 @@ const Login = ({ history }) => {
                 </div>
               </div>
               <div className='flex flex-col items-center'>
-                <GoogleLogin
-                  clientId={`${process.env.REACT_APP_GOOGLE_CLIENT}`}
-                  onSuccess={responseGoogle}
-                  onFailure={responseGoogle}
-                  cookiePolicy={'single_host_origin'}
-                  render={(renderProps) => (
-                    <button
-                      onClick={renderProps.onClick}
-                      disabled={renderProps.disabled}
-                      className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
-                    >
-                      <div className=' p-2 rounded-full '>
-                        <i className='fab fa-google ' />
-                      </div>
-                      <span className='ml-4'>Sign In with Google</span>
-                    </button>
-                  )}
-                ></GoogleLogin>
                 <a
                   href='/register'
                   className='w-full max-w-xs font-bold shadow-sm rounded-lg py-3
@@ -154,6 +157,41 @@ const Login = ({ history }) => {
                 </a>
               </div>
             </form>
+            <GoogleLogin
+              clientId={`${process.env.REACT_APP_GOOGLE_CLIENT}`}
+              onSuccess={responseGoogle}
+              onFailure={responseGoogle}
+              cookiePolicy={'single_host_origin'}
+              render={(renderProps) => (
+                <button
+                  onClick={renderProps.onClick}
+                  disabled={renderProps.disabled}
+                  className='mt-5 w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
+                >
+                  <div className=' p-2 rounded-full '>
+                    <i className='fab fa-google ' />
+                  </div>
+                  <span className='ml-4'>Sign In with Google</span>
+                </button>
+              )}
+            ></GoogleLogin>
+            <FacebookLogin
+              appId={`${process.env.REACT_APP_FACEBOOK_CLIENT}`}
+              autoLoad={false}
+              callback={responseFacebook}
+              render={(renderProps) => (
+                <button
+                  onClick={renderProps.onClick}
+                  disabled={renderProps.disabled}
+                  className='mt-5 w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-indigo-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline'
+                >
+                  <div className=' p-2 rounded-full '>
+                    <i className='fab fa-facebook ' />
+                  </div>
+                  <span className='ml-4'>Sign In with Facebook</span>
+                </button>
+              )}
+            ></FacebookLogin>
           </div>
         </div>
         <div className='flex-1 bg-indigo-100 text-center hidden lg:flex'>
